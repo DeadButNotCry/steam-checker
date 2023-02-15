@@ -1,3 +1,4 @@
+import sqlite3
 import requests
 from bs4 import BeautifulSoup
 from random_user_agent.user_agent import UserAgent
@@ -5,6 +6,7 @@ from random_user_agent.params import SoftwareName, OperatingSystem
 
 from Models.Account import Account
 from checker.netscape_loader import normal_format
+import lxml.html
 
 
 def cookie_check(file_name):
@@ -30,6 +32,36 @@ def cookie_check(file_name):
     if steam_id is None:
         acc.works = False
         return acc
-    acc.works = True
+    id = steam_id.text.split(" ")[2]
+    acc.id = id
+    # Check for duplicates
+    con = sqlite3.connect("duplicate.db")
+    res_from_db = con.execute("SELECT * FROM duplicates WHERE id=?",(id,))
+    id_from_db = res_from_db.fetchone()
+    if id_from_db is not None:
+        acc.duplicate = True
+        con.close()
+        print(acc.duplicate)
+        return acc
+    else:
+         acc.duplicate = False
+         print(acc.duplicate)
+         #TODO: save new acc to db
+         con.close()
+    # TODO: strange,need check on acc without phone number
+    number_is_exists = soup.find(class_="phone_header_description").find(class_="account_data_field")
+    if number_is_exists is not None:
+        acc.phone_number = True
 
+
+    headers["Host"] = "steamcommunity.com"
+    headers["Refer"] = "https://steamcommunity.com/profiles/deadbutnotcry/friends/"
+    resp = requests.get(f"https://steamcommunity.com/profiles/{id}/friends/",headers=headers)
+    soup = BeautifulSoup(resp.content,"html.parser")   
+    friends = soup.find(class_="friends_count")
+    if friends is None:
+        acc.friends_count = 0
+        return acc;
+
+    #TODO: Chat check
     return acc
