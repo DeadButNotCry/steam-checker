@@ -6,5 +6,7 @@ class Account:
         self.duplicate = False
         self.works = True
         self.phone_number = False
+        self.is_russia = False
+
     def __str__(self) -> str:
-        return f"{self.id} {self.friends_count} {self.spammed} {self.duplicate} {self.works} {self.phone_number}"
+        return f"{self.id} {self.friends_count} {self.spammed} {self.duplicate} {self.works} {self.phone_number} {self.is_russia}"

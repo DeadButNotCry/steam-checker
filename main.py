@@ -1,15 +1,14 @@
 import os
 
-from checker.checker import cookie_check
+from bot.bot import bot_start
+from checker.checker import cookie_check, start_checking
 from init import init
 
 
 def main():
-    for filename in os.listdir("cookies"):
-        res = cookie_check(filename)
-        print("Cookie", str(res))
+    bot_start()
+
 
 if __name__ == '__main__':
     init()
     main()
-
