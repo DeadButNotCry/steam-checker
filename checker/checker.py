@@ -21,12 +21,14 @@ def start_checking(state):
     operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value]
     user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
     user_agent = user_agent_rotator.get_random_user_agent()
-    opt = webdriver.ChromeOptions()
-    opt.add_argument(f"user-agent={user_agent}")
-    driver = webdriver.Chrome(r'chromedriver',options=opt)
+    # opt = webdriver.ChromeOptions()
+    # opt.add_argument(f"user-agent={user_agent}")
+    # driver = webdriver.Chrome(r'chromedriver',options=opt)
+    # driver.get("https://steamcommunity.com/id/idydalekosolnce")
+    # driver.delete_all_cookies()
     try:
         for filename in os.listdir("cookies"):
-            res = cookie_check(filename, state, driver, user_agent)
+            res = cookie_check(filename, state, None, user_agent)
             if res.works and not res.duplicate:
                 shutil.copy(f"cookies/{filename}", f"result/valid/{filename}")
                 if res.friends_count != 0:
@@ -38,8 +40,9 @@ def start_checking(state):
                 if res.phone_number:
                     shutil.copy(f"cookies/{filename}", f"result/verified/{filename}")
     finally:
-        driver.close()
-        driver.quit()
+        # driver.close()
+        # driver.quit()
+        pass
 
 
 def cookie_check(file_name, state, driver, user_agent):
@@ -79,8 +82,8 @@ def cookie_check(file_name, state, driver, user_agent):
     else:
         acc.duplicate = False
         # TODO: save new acc to db
-        # con.execute('INSERT INTO duplicates (id) VALUES (?)', (id,))
-        # con.commit()
+        con.execute('INSERT INTO duplicates (id) VALUES (?)', (id,))
+        con.commit()
         con.close()
 
     # TODO: strange,need check on acc without phone number
@@ -94,26 +97,41 @@ def cookie_check(file_name, state, driver, user_agent):
     t3 = datetime.now()
     print((t3 - t2).total_seconds())
     # Friends Check
+    link_to_acc = soup.find(class_="user_avatar").get("href")
+    print(link_to_acc)
+    new_headers = headers = {
+        "User-Agent": user_agent,
+        "Cookie": cookies,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Refer": "https://store.steampowered.com/",
+        "Host": "steamcommunity.com"
+    }
+    new_resp = requests.get(link_to_acc, headers=new_headers)
 
-    try:
-
-        cookies_sel = json_cookies(cookie)
-        for c in cookies_sel:
-            driver.add_cookie(c)
-        driver.refresh()
-        driver.find_element(by=By.XPATH, value='//*[@id="global_actions"]/a/img').click()
-        try:
-            el = driver.find_element(By.XPATH,
-                                     '//*[@id="responsive_page_template_content"]/div[1]/div[2]/div/div[1]/div[4]/div[1]/a/span[2]')
-            acc.friends_count = int(el.text)
-            state.FRIENDS += int(el.text)
-            print((datetime.now() - t3).total_seconds())
-            print((datetime.now() - t1).total_seconds())
-            driver.delete_all_cookies()
-            return acc
-        except NoSuchElementException:
-            driver.delete_all_cookies()
-            acc.friends_count = 0
-            return acc
-    finally:
-        pass
+    new_soup = BeautifulSoup(new_resp.content, "html.parser")
+    acc.friends_count = len(new_soup.find_all(class_="friendBlock"))
+    state.FRIENDS += acc.friends_count
+    print((datetime.now() - t1).total_seconds())
+    return acc
+    # try:
+    #
+    #     cookies_sel = json_cookies(cookie)
+    #     for c in cookies_sel:
+    #         driver.add_cookie(c)
+    #     driver.refresh()
+    #     driver.find_element(by=By.XPATH, value='//*[@id="global_actions"]/a/img').click()
+    #     try:
+    #         el = driver.find_element(By.XPATH,
+    #                                  '//*[@id="responsive_page_template_content"]/div[1]/div[2]/div/div[1]/div[4]/div[1]/a/span[2]')
+    #         acc.friends_count = int(el.text)
+    #         state.FRIENDS += int(el.text)
+    #         print((datetime.now() - t3).total_seconds())
+    #         print((datetime.now() - t1).total_seconds())
+    #         driver.delete_all_cookies()
+    #         return acc
+    #     except NoSuchElementException:
+    #         driver.delete_all_cookies()
+    #         acc.friends_count = 0
+    #         return acc
+    # finally:
+    #     pass

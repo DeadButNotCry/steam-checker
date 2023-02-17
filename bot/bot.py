@@ -4,7 +4,7 @@ from datetime import datetime
 from time import sleep
 
 import telebot
-from telebot.async_telebot import AsyncTeleBot
+
 
 from state import State
 from checker.checker import start_checking
@@ -13,14 +13,15 @@ import zipfile
 
 
 def bot_start():
-    bot = telebot.AsyncTeleBot(BOT_TOKEN, parse_mode="MARKDOWN")  # You can set parse_mode by default. HTML or MARKDOWN
+    bot = telebot.TeleBot(BOT_TOKEN, parse_mode="MARKDOWN")  # You can set parse_mode by default. HTML or MARKDOWN
 
     @bot.message_handler(commands=['start'])
-    async def start_message(message):
-        await bot.send_message(message.chat.id, 'Hello!')
+    def start_message(message):
+        bot.send_message(message.chat.id, 'Hello!')
 
     @bot.message_handler(content_types=['document'])
     def handle_docs_audio(message):
+        os.system("rm -rf cookies/*")
         state = State()
         if message.document.mime_type != "application/zip" or message.from_user.id != ADMIN_ID:
             bot.reply_to(message, "Use zip pls.")
@@ -55,8 +56,6 @@ def bot_start():
 👥 Дубликатов с базой:{state.DUPL}
 
 📁 Статистика Куков:
-— Непроспам Куки: 0
-— Проспам Куки: 0
 — Пустые Куки: {count_of_without_friends}
 — Всего друзей: {state.FRIENDS}
 🧊 Время на чек:  {(datetime.now() - state.TIME).total_seconds()}с.
