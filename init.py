@@ -21,3 +21,5 @@ def init():
         os.mkdir("result/not_ru")
         os.mkdir("result/verified")
         os.mkdir("result/valid")
+        os.mkdir("result/spammed")
+        os.mkdir("result/not_spammed")

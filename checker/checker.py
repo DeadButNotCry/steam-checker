@@ -39,6 +39,12 @@ def start_checking(state):
                     shutil.copy(f"cookies/{filename}", f"result/not_ru/{filename}")
                 if res.phone_number:
                     shutil.copy(f"cookies/{filename}", f"result/verified/{filename}")
+                if res.spammed:
+                    shutil.copy(f"cookies/{filename}", f"result/spammed/{filename}")
+                else:
+                    shutil.copy(f"cookies/{filename}", f"result/not_spammed/{filename}")
+
+
     finally:
         # driver.close()
         # driver.quit()
@@ -84,8 +90,8 @@ def cookie_check(file_name, state, driver, user_agent):
     else:
         acc.duplicate = False
         # TODO: save new acc to db
-        # con.execute('INSERT INTO duplicates (id) VALUES (?)', (id,))
-        # con.commit()
+        con.execute('INSERT INTO duplicates (id) VALUES (?)', (id,))
+        con.commit()
         con.close()
 
     # TODO: strange,need check on acc without phone number
@@ -115,6 +121,33 @@ def cookie_check(file_name, state, driver, user_agent):
     acc.friends_count = len(new_soup.find_all(class_="friendBlock"))
     state.FRIENDS += acc.friends_count
     print("Friends check")
+    print((datetime.now() - t1).total_seconds())
+
+    zaebal_headers = headers = {
+        "User-Agent": user_agent,
+        "Cookie": cookies,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Refer": "https://steamcommunity.com/",
+        "Host": "help.steampowered.com"
+    }
+    zaebal_resp = requests.get("https://help.steampowered.com/en/accountdata/GetFriendMessagesLog", headers=zaebal_headers)
+
+    zaebal_soup = BeautifulSoup(zaebal_resp.content, "html.parser")
+    table = zaebal_soup.find(id="AccountDataTable_1")
+    acc.spammed = False
+    if table is None or table.find("tbody") is None or len(table.find("tbody").find_all("tr")) == 0:
+        acc.spammed = False
+        state.NOT_SPAMMED += 1
+    else:
+        tr = table.find("tbody").find_all("tr")
+        for i in tr:
+            txt = i.text
+            if "gift" in txt or "claim" in txt or "handout" in txt or "distribution" in txt:
+                acc.spammed = True
+                state.SPAMMED += 1
+                break
+    # gift, claim, handout, distribution
+    print("All checked")
     print((datetime.now() - t1).total_seconds())
     return acc
     # try:

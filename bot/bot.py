@@ -48,6 +48,8 @@ def bot_start():
         os.system("rm -rf result/not_ru/*")
         os.system("rm -rf result/verified/*")
         os.system("rm -rf result/valid/*")
+        os.system("rm -rf result/spammed/*")
+        os.system("rm -rf result/not_spammed/*")
 
         bot.reply_to(message,
                      f"""Всего: 
@@ -56,6 +58,8 @@ def bot_start():
 👥 Дубликатов с базой:{state.DUPL}
 
 📁 Статистика Куков:
+— Непроспам Куки: {state.NOT_SPAMMED}
+— Проспам Куки: {state.SPAMMED}
 — Пустые Куки: {count_of_without_friends}
 — Всего друзей: {state.FRIENDS}
 🧊 Время на чек:  {(datetime.now() - state.TIME).total_seconds()-1.5}с.
