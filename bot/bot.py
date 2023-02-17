@@ -58,7 +58,7 @@ def bot_start():
 📁 Статистика Куков:
 — Пустые Куки: {count_of_without_friends}
 — Всего друзей: {state.FRIENDS}
-🧊 Время на чек:  {(datetime.now() - state.TIME).total_seconds()}с.
+🧊 Время на чек:  {(datetime.now() - state.TIME).total_seconds()-1.5}с.
 """)
 
     bot.infinity_polling()

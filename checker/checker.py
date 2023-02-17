@@ -57,8 +57,11 @@ def cookie_check(file_name, state, driver, user_agent):
         "Refer": "https://steamcommunity.com/",
         "Host": "store.steampowered.com"
     }
+    print("Get acc info")
     t1 = datetime.now()
     resp = requests.get("https://store.steampowered.com/account/", headers=headers)
+    t2 = datetime.now()
+    print((t2 - t1).total_seconds())
     soup = BeautifulSoup(resp.content, "html.parser")
     steam_id = soup.find(class_="youraccount_steamid")
     acc = Account()
@@ -68,8 +71,7 @@ def cookie_check(file_name, state, driver, user_agent):
         return acc
     id = steam_id.text.split(" ")[2]
     acc.id = id
-    t2 = datetime.now()
-    print((t2 - t1).total_seconds())
+
     # Check for duplicates
     con = sqlite3.connect("duplicate.db")
     res_from_db = con.execute('SELECT * FROM duplicates WHERE id=?', (id,))
@@ -82,8 +84,8 @@ def cookie_check(file_name, state, driver, user_agent):
     else:
         acc.duplicate = False
         # TODO: save new acc to db
-        con.execute('INSERT INTO duplicates (id) VALUES (?)', (id,))
-        con.commit()
+        # con.execute('INSERT INTO duplicates (id) VALUES (?)', (id,))
+        # con.commit()
         con.close()
 
     # TODO: strange,need check on acc without phone number
@@ -95,6 +97,7 @@ def cookie_check(file_name, state, driver, user_agent):
     country = soup.find(class_="country_settings").find("span").text
     acc.is_russia = country == "Russian Federation"
     t3 = datetime.now()
+    print("Acc info + duplicate check")
     print((t3 - t2).total_seconds())
     # Friends Check
     link_to_acc = soup.find(class_="user_avatar").get("href")
@@ -111,6 +114,7 @@ def cookie_check(file_name, state, driver, user_agent):
     new_soup = BeautifulSoup(new_resp.content, "html.parser")
     acc.friends_count = len(new_soup.find_all(class_="friendBlock"))
     state.FRIENDS += acc.friends_count
+    print("Friends check")
     print((datetime.now() - t1).total_seconds())
     return acc
     # try:
